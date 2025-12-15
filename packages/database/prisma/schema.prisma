@@ -12,3 +12,50 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model User {
+  id                String    @id @default(uuid())
+  email             String    @unique
+  name              String?
+  avatarUrl         String?
+  role              UserRole  @default(USER)
+
+  passwordHash      String?
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  accounts          Account[]
+  sessions          Session[]
+}
+
+model Account {
+  id                String    @id @default(uuid())    
+  userId            String
+  provider          String
+  providerAccountId String
+
+  accessToken       String? @db.Text
+  refreshToken      String? @db.Text
+
+  createdAt         DateTime  @default(now())
+
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id                String    @id @default(uuid())
+  userId            String
+  expiresAt         DateTime
+
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt         DateTime  @default(now())
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
